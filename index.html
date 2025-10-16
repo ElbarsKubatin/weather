@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Forecast</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 500px;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .input-group {
+            display: flex;
+            margin-bottom: 25px;
+        }
+        
+        #cityId {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px 0 0 10px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        #cityId:focus {
+            border-color: #6e8efb;
+        }
+        
+        button {
+            background: linear-gradient(to right, #6e8efb, #a777e3);
+            color: white;
+            border: none;
+            border-radius: 0 10px 10px 0;
+            padding: 0 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .weather-info {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: rgba(110, 142, 251, 0.1);
+            border-radius: 15px;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        #nameeid {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        #tempId {
+            font-size: 48px;
+            font-weight: 700;
+            color: #333;
+            margin: 10px 0;
+        }
+        
+        #mainId {
+            font-size: 22px;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        
+        #decpId {
+            font-size: 16px;
+            color: #777;
+            margin-bottom: 15px;
+        }
+        
+        #windId {
+            font-size: 16px;
+            color: #555;
+            margin-bottom: 15px;
+        }
+        
+        #imgId {
+            width: 100px;
+            height: 100px;
+            margin: 10px auto;
+        }
+        
+        .error {
+            color: #e74c3c;
+            margin-top: 15px;
+            font-weight: 500;
+            display: none;
+        }
+        
+        .loading {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #6e8efb;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .footer {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Weather Forecast</h1>
+        
+        <div class="input-group">
+            <input type="text" id="cityId" placeholder="Enter city name">
+            <button onclick="pogoda()">GET WEATHER</button>
+        </div>
+        
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>Loading weather data...</p>
+        </div>
+        
+        <div class="error" id="errorId"></div>
+        
+        <div class="weather-info" id="weatherInfo">
+            <h1 id="nameeid"></h1>
+            <img id="imgId" alt="Weather icon">
+            <p id="tempId"></p>
+            <p id="mainId"></p>
+            <p id="decpId"></p>
+            <p id="windId"></p>
+        </div>
+        
+        <div class="footer">
+            <p>Enter a city name to get current weather information</p>
+        </div>
+    </div>
+
+    <script>
+        // Your original JavaScript code with minor fixes for element IDs
+        const pTemp = document.getElementById("tempId");
+        const pMain = document.getElementById("mainId");
+        const pDesp = document.getElementById("decpId"); // Fixed ID
+        const pWind = document.getElementById("windId");
+        const namee = document.getElementById("nameeid"); // Fixed ID
+        const icon = document.getElementById("imgId");
+        
+        async function pogoda() {
+            const city = document.getElementById("cityId").value;
+            
+            // Show loading indicator
+            document.querySelector('.loading').style.display = 'block';
+            document.querySelector('.error').style.display = 'none';
+            document.getElementById('weatherInfo').style.display = 'none';
+            
+            try {
+                const result = await fetch('https://api.openweathermap.org/data/2.5/weather?q='+city+'&appid=d4d633a5992608290f8486723e625137&units=metric');
+                
+                if (!result.ok) {
+                    throw new Error('City not found');
+                }
+                
+                const data = await result.json();
+                
+                pTemp.innerHTML = Math.floor(data.main.temp) + "<sup>o</sup>C";
+                pMain.innerHTML = data.weather[0].main;
+                pDesp.innerHTML = data.weather[0].description;
+                icon.src = 'https://openweathermap.org/img/wn/' + data.weather[0].icon + '@2x.png';
+                pWind.innerHTML = data.wind.speed + " m/s";
+                namee.innerHTML = data.name;
+                
+                // Show weather info
+                document.getElementById('weatherInfo').style.display = 'block';
+                
+            } catch (error) {
+                document.querySelector('.error').textContent = 'Error: ' + error.message;
+                document.querySelector('.error').style.display = 'block';
+            } finally {
+                document.querySelector('.loading').style.display = 'none';
+            }
+        }
+        
+        // Allow pressing Enter to trigger the search
+        document.getElementById('cityId').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                pogoda();
+            }
+        });
+    </script>
+</body>
+</html>
